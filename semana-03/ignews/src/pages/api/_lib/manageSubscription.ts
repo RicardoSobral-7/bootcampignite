@@ -27,10 +27,31 @@ export async function saveSubscription(
   }
 
   await fauna.query(
-    q.Create(
-      q.Collection('subscriptions'),
-      { data: subscriptionData }
+    q.If(
+      q.Not(
+        q.Exists(
+          q.Match(
+            q.Index('subscription_by_id'),
+            q.Casefold(subscriptionId)
+          )
+        )
+      ),
+      q.Create(
+        q.Collection('subscriptions'),
+        { data: subscriptionData }
+      ),
+      q.Replace(
+        q.Select(
+          "ref",
+          q.Get(
+            q.Match(
+              q.Index('subscription_by_id'),
+              q.Casefold(subscriptionId),
+            )
+          )
+        ),
+        { data: subscriptionData }
+      )
     )
   )
-
 }
