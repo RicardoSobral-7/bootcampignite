@@ -9,7 +9,7 @@ async function buffer(readable: Readable) {
 
   for await (const chunk of readable) {
     chunks.push(
-      typeof chunk == "string" ?
+      typeof chunk === "string" ?
         Buffer.from(chunk) : chunk
     );
   }
@@ -31,7 +31,7 @@ const relevantEvents = new Set([
 
 export default async (req: NextApiRequest, res: NextApiResponse) => {
 
-  if (req.method == 'POST') {
+  if (req.method === 'POST') {
     const buf = await buffer(req);
     const secret = req.headers['stripe-signature']
 
@@ -56,15 +56,17 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
             await saveSubscription(
               subscription.id,
               subscription.customer.toString(),
+              false
             );
-
             break;
+
           case 'checkout.session.completed':
             const checkoutSession = event.data.object as Stripe.Checkout.Session;
 
             await saveSubscription(
               checkoutSession.subscription.toString(),
-              checkoutSession.customer.toString()
+              checkoutSession.customer.toString(),
+              true
             )
             break;
           default:
